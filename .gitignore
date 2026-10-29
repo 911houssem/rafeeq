@@ -1,0 +1,23 @@
+# بيئة
+.venv/
+__pycache__/
+*.pyc
+*.log
+setup_log.txt
+
+# بيانات التشغيل (قاعدة بيانات/أسرار/صوت مؤقت)
+data/
+
+# مجلدات/أوزان النماذج الضخمة — تُدار يدويًا (27+ جيجابايت)
+الاستماع Jais-ASR/
+التفكير Jais 3 7B/
+التحدث SILMA TTS/
+*.pt
+*.safetensors
+*.gguf
+*.bin
+*.onnx
+
+# نظام
+.DS_Store
+Thumbs.db

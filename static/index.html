@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>رفيق — مساعدك الصوتي</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+</head>
+<body>
+
+<!-- ═══════════════ شاشة الدخول / إنشاء المالك ═══════════════ -->
+<div id="authView" class="auth-view hidden">
+  <div class="auth-card">
+    <div class="auth-logo">🌙 رفيق</div>
+    <div class="auth-sub" id="authSubtitle">مساعدك الصوتي العربي — يستمع ويفكر ويتكلم</div>
+
+    <div id="setupBox" class="hidden">
+      <h2>إنشاء حساب المالك</h2>
+      <p class="hint">أنت أول مستخدم في النظام — ستحصل على صلاحيات كاملة (المالك).</p>
+      <input id="setupName" type="text" placeholder="الاسم (اختياري)">
+      <input id="setupEmail" type="email" placeholder="البريد الإلكتروني" autocomplete="username">
+      <input id="setupPass" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" autocomplete="new-password">
+      <button class="btn primary wide" id="setupBtn">إنشاء الحساب والدخول</button>
+    </div>
+
+    <div id="loginBox" class="hidden">
+      <div class="tabs">
+        <button class="tab active" data-tab="login">تسجيل الدخول</button>
+        <button class="tab hidden" data-tab="register" id="registerTab">حساب جديد</button>
+      </div>
+      <div id="loginPane">
+        <input id="loginEmail" type="email" placeholder="البريد الإلكتروني" autocomplete="username">
+        <input id="loginPass" type="password" placeholder="كلمة المرور" autocomplete="current-password">
+        <button class="btn primary wide" id="loginBtn">دخول</button>
+      </div>
+      <div id="registerPane" class="hidden">
+        <input id="regName" type="text" placeholder="الاسم (اختياري)">
+        <input id="regEmail" type="email" placeholder="البريد الإلكتروني">
+        <input id="regPass" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)">
+        <button class="btn primary wide" id="regBtn">إنشاء حساب</button>
+        <p class="hint">الحساب الجديد يحصل على <b id="freeMinutesHint">30</b> دقيقة مجانًا.</p>
+      </div>
+      <div id="authError" class="error hidden"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ التطبيق الرئيسي ═══════════════ -->
+<div id="appView" class="app hidden">
+
+  <!-- الشريط الجانبي -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-head">
+      <div class="logo">🌙 رفيق</div>
+      <button class="icon-btn" id="collapseBtn" title="طي الشريط">»</button>
+    </div>
+    <button class="new-chat" id="newChatBtn">＋ محادثة جديدة</button>
+    <div class="conv-list" id="convList"></div>
+    <nav class="side-nav">
+      <a href="#/chat" data-route="chat">💬 المحادثة</a>
+      <a href="#/billing" data-route="billing">💳 الاشتراكات والدقائق</a>
+      <a href="#/keys" data-route="keys">🔑 مفاتيح API</a>
+      <a href="#/admin" data-route="admin" id="adminNavLink" class="hidden">👑 لوحة المالك</a>
+    </nav>
+    <div class="side-foot">
+      <div class="minutes-pill" id="minutesPill" title="الدقائق المتبقية">… دقيقة</div>
+      <div class="user-row">
+        <div class="avatar" id="userAvatar">؟</div>
+        <div class="user-meta">
+          <div id="userName">—</div>
+          <div id="userRole" class="muted">—</div>
+        </div>
+        <button class="icon-btn" id="logoutBtn" title="خروج">⎋</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- المحتوى -->
+  <main class="main">
+    <!-- الرأس -->
+    <header class="topbar">
+      <button class="icon-btn mobile-only" id="menuBtn">☰</button>
+      <div class="stage-chip" id="stageChip"><span class="dot"></span><span id="stageText">جاهز</span></div>
+      <div class="model-status" id="modelStatus"></div>
+      <div class="top-actions">
+        <label class="switch" title="تشغيل الرد الصوتي">
+          <input type="checkbox" id="voiceReplyToggle" checked>
+          <span>🔊 رد صوتي</span>
+        </label>
+      </div>
+    </header>
+
+    <!-- إنذار النماذج -->
+    <div id="loadingBanner" class="banner hidden">⏳ <span id="loadingText">جاري تحميل النماذج…</span></div>
+    <div id="errorBanner" class="banner err hidden"></div>
+
+    <!-- ═══ view: chat ═══ -->
+    <section id="view-chat" class="view">
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome">
+          <div class="w-logo">🌙</div>
+          <h1>أنا رفيق، مساعدك الصوتي</h1>
+          <p>اضغط على الميكروفون وتحدث معي — سأستمع، أفكر، وأرد عليك بصوتي.<br>أو اكتب رسالتك في الأسفل.</p>
+          <div class="suggestions">
+            <button class="sug">اشرح لي كيف تعمل معك بالتفصيل</button>
+            <button class="sug">ما هي أوقات العمل لديك؟</button>
+            <button class="sug">ساعدني في كتابة رسالة رسمية</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="composer-wrap">
+        <div class="live-transcript hidden" id="liveTranscript"></div>
+        <div class="composer">
+          <textarea id="input" rows="1" placeholder="اكتب رسالتك… (Enter للإرسال)"></textarea>
+          <button class="mic-btn" id="micBtn" title="اضغط للتحدث">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+          </button>
+          <button class="send-btn" id="sendBtn" title="إرسال">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
+        </div>
+        <div class="composer-hint">💡 <b>بالدقيقة لا بالتوكن</b> — كل دقيقة تُحتسب عند استهلاكها فقط</div>
+      </div>
+    </section>
+
+    <!-- ═══ view: billing ═══ -->
+    <section id="view-billing" class="view hidden">
+      <div class="page">
+        <h1>💳 الاشتراكات والدقائق</h1>
+        <div class="cards-row" id="billingSummary"></div>
+        <h2>الباقات</h2>
+        <div class="plans" id="plansGrid"></div>
+        <h2>شحن رصيد إضافي</h2>
+        <div class="topups" id="topupGrid"></div>
+        <h2>سجل الاستهلاك</h2>
+        <div class="table-wrap"><table id="usageTable">
+          <thead><tr><th>القناة</th><th>المدة (ث)</th><th>الدقائق</th><th>المتبقي</th><th>التاريخ</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <p class="hint" id="billingNote"></p>
+      </div>
+    </section>
+
+    <!-- ═══ view: keys ═══ -->
+    <section id="view-keys" class="view hidden">
+      <div class="page">
+        <h1>🔑 مفاتيح API</h1>
+        <p class="hint">استخدم المفاتيح للوصول إلى النظام من تطبيقاتك الخارجية — التوافق مع OpenAI:</p>
+        <pre class="code-block" dir="ltr">POST /v1/chat/completions      # محادثة نصية
+POST /v1/audio/transcriptions  # صوت ← نص
+POST /v1/audio/speech          # نص ← صوت
+GET  /v1/usage                 # الرصيد المتبقي
+Authorization: Bearer sk-...</pre>
+        <div class="row-gap">
+          <input id="keyName" type="text" placeholder="اسم المفتاح (مثال: تطبيق الويب)">
+          <button class="btn primary" id="createKeyBtn">إنشاء مفتاح</button>
+        </div>
+        <div class="table-wrap"><table id="keysTable">
+          <thead><tr><th>الاسم</th><th>المفتاح</th><th>أُنشئ</th><th>آخر استخدام</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ═══ view: admin ═══ -->
+    <section id="view-admin" class="view hidden">
+      <div class="page">
+        <h1>👑 لوحة المالك</h1>
+        <div class="tabs" id="adminTabs">
+          <button class="tab active" data-atab="stats">📊 الإحصائيات</button>
+          <button class="tab" data-atab="users">👥 المستخدمون</button>
+          <button class="tab" data-atab="plans">📦 الباقات</button>
+          <button class="tab" data-atab="akeys">🔐 المفاتيح</button>
+          <button class="tab" data-atab="settings">⚙️ الإعدادات</button>
+          <button class="tab" data-atab="audit">📜 السجل</button>
+        </div>
+
+        <div id="atab-stats" class="atab">
+          <div class="stat-cards" id="statCards"></div>
+          <h3>الاستهلاك اليومي (آخر 14 يوم)</h3>
+          <div class="chart" id="usageChart"></div>
+          <h3>التوزيع حسب القناة</h3>
+          <div id="channelBars" class="channel-bars"></div>
+        </div>
+
+        <div id="atab-users" class="atab hidden">
+          <div class="row-gap">
+            <input id="userSearch" type="search" placeholder="بحث بالبريد أو الاسم…">
+            <button class="btn" id="userSearchBtn">بحث</button>
+          </div>
+          <div class="table-wrap"><table id="usersTable">
+            <thead><tr><th>#</th><th>البريد</th><th>الاسم</th><th>الرتبة</th><th>الحالة</th><th>الرصيد</th><th>الباقة</th><th>إجراءات</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+
+        <div id="atab-plans" class="atab hidden">
+          <div class="table-wrap"><table id="plansTable">
+            <thead><tr><th>الاسم</th><th>السعر</th><th>الدقائق</th><th>الوصف</th><th>فعالة</th><th>المشتركون</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+          <button class="btn" id="addPlanBtn">＋ إضافة باقة</button>
+        </div>
+
+        <div id="atab-akeys" class="atab hidden">
+          <div class="table-wrap"><table id="allKeysTable">
+            <thead><tr><th>المالك</th><th>الاسم</th><th>المفتاح</th><th>أُنشئ</th><th>آخر استخدام</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+
+        <div id="atab-settings" class="atab hidden">
+          <div class="settings-form" id="settingsForm"></div>
+          <button class="btn primary" id="saveSettingsBtn">حفظ الإعدادات</button>
+          <span id="settingsSaved" class="ok-msg hidden">✓ حُفظ</span>
+        </div>
+
+        <div id="atab-audit" class="atab hidden">
+          <div class="table-wrap"><table id="auditTable">
+            <thead><tr><th>#</th><th>المستخدم</th><th>الإجراء</th><th>الهدف</th><th>الوقت</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- نافذة عرض المفتاح مرة واحدة -->
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <h3 id="modalTitle">مفتاحك الجديد</h3>
+    <div class="key-reveal" id="modalKey"></div>
+    <button class="btn wide" id="modalCopy">📋 نسخ</button>
+    <p class="hint">احتفظ به في مكان آمن — <b>لن يُعرض مجددًا</b>.</p>
+    <button class="btn primary wide" id="modalClose">تم</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
