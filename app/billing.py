@@ -40,7 +40,7 @@ def minutes_state(user_id: int) -> dict:
     user = db.one("SELECT * FROM users WHERE id=?", (user_id,))
     if not user:
         return {"plan_left": 0, "balance_left": 0, "total_left": 0}
-    db.renew_plan_if_due(user)
+    renew_plan_if_due(user)
     user = db.one("SELECT * FROM users WHERE id=?", (user_id,)) or user
     plan_left = 0
     plan_name = None
@@ -83,7 +83,7 @@ def charge(
     user = db.one("SELECT * FROM users WHERE id=?", (user_id,))
     if not user:
         return {"charged": 0, "requested": 0, "plan_left": 0, "balance_left": 0, "ok": False}
-    db.renew_plan_if_due(user)
+    renew_plan_if_due(user)
     user = db.one("SELECT * FROM users WHERE id=?", (user_id,)) or user
 
     requested = seconds_to_minutes(seconds)
