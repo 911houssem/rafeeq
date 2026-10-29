@@ -21,3 +21,4 @@ data/
 # نظام
 .DS_Store
 Thumbs.db
+.runpod_key
