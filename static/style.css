@@ -296,3 +296,19 @@ tr:hover td { background: var(--bg-hover); }
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb { background: #444; border-radius: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* زر نطق الرد 🔊 */
+.m-actions:empty { display: none; }
+.m-speak {
+  margin-top: 6px;
+  background: none;
+  border: 1px solid #3a3f4d;
+  border-radius: 18px;
+  padding: 3px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 0.65;
+  transition: opacity .15s, background .15s;
+}
+.m-speak:hover { opacity: 1; background: #262b36; }
+.m-speak:disabled { cursor: wait; opacity: 0.4; }

@@ -7,7 +7,7 @@ import json
 import time
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from .. import billing, db, security
@@ -227,3 +227,41 @@ async def chat(body: ChatIn, user: dict = Depends(get_user)):
 
 def _sse(obj: dict) -> str:
     return "data: " + json.dumps(obj, ensure_ascii=False) + "\n\n"
+
+
+# --------------------------------------------------------------- نطق الردود (زر 🔊)
+class TTSIn(BaseModel):
+    text: str = Field(min_length=1, max_length=4000)
+    speed: float | None = Field(default=None, ge=0.5, le=2.0)
+
+
+@router.post("/tts")
+async def tts(body: TTSIn, user: dict = Depends(get_user)):
+    """يحوّل نصًا إلى صوت WAV — يعمل حتى على الاستضافة المجانية (نموذج الكلام الأصلي SILMA)."""
+    if not billing.has_minutes(user["id"]) and not is_staff(user):
+        raise HTTPException(status_code=402, detail="انتهت دقائقك")
+    t0 = time.time()
+    from ..pipeline.tts import get_tts
+    from ..pipeline.audio import pcm16_to_wav
+
+    speed = body.speed if body.speed is not None else float(db.get_setting("tts_speed", "1.0") or 1.0)
+    pcm, sr = await run_sync(get_tts().synthesize, body.text, speed)
+    secs = time.time() - t0
+    charged = 0
+    st = billing.minutes_state(user["id"])
+    if not is_staff(user):
+        r = billing.charge(user["id"], secs, "speech", detail="نطق الرد الصوتي")
+        charged = r["charged"]
+        st = billing.minutes_state(user["id"])
+        if not r["ok"]:
+            raise HTTPException(status_code=402, detail="نفدت دقائقك")
+    return Response(
+        content=pcm16_to_wav(pcm, sr),
+        media_type="audio/wav",
+        headers={
+            "X-Minutes-Charged": str(charged),
+            "X-Minutes-Plan-Left": str(st.get("plan_left", 0)),
+            "X-Minutes-Balance-Left": str(st.get("balance_left", 0)),
+            "X-Billing-Unit": "minute",
+        },
+    )

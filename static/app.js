@@ -206,7 +206,10 @@ async function openSession(id) {
     const list = $("messages");
     list.querySelectorAll(".msg").forEach((n) => n.remove());
     $("welcome").classList.add("hidden");
-    (r.messages || []).forEach((m) => addBubble(m.role, m.content));
+    (r.messages || []).forEach((m) => {
+      const b = addBubble(m.role, m.content);
+      if (m.role === "assistant" && m.content) setSpeakable(b, m.content);
+    });
     list.scrollTop = list.scrollHeight;
   } catch (e) { toast(e.message, true); }
   loadSessions();
@@ -222,10 +225,44 @@ function addBubble(role, text) {
   div.className = "msg " + role;
   div.innerHTML = `
     <div class="m-avatar">${role === "user" ? "🧑" : "🌙"}</div>
-    <div class="m-body">${role === "user" ? esc(text) : mdRender(text)}${role === "assistant" && text === "" ? '<span class="caret">&nbsp;</span>' : ""}</div>`;
+    <div class="m-body">${role === "user" ? esc(text) : mdRender(text)}${role === "assistant" && text === "" ? '<span class="caret">&nbsp;</span>' : ""}</div>
+    <div class="m-actions"></div>`;
   list.appendChild(div);
   list.scrollTop = list.scrollHeight;
   return div;
+}
+
+function setSpeakable(bubble, text) {
+  const box = bubble.querySelector(".m-actions");
+  if (!box || box.dataset.on) { const b = bubble.querySelector(".m-speak"); if (b) b.dataset.tts = text; return; }
+  const btn = document.createElement("button");
+  btn.className = "m-speak";
+  btn.title = "نطق الرد 🔊";
+  btn.textContent = "🔊";
+  btn.dataset.tts = text;
+  btn.onclick = () => speak(btn.dataset.tts, btn);
+  box.dataset.on = "1";
+  box.appendChild(btn);
+}
+
+async function speak(text, btn) {
+  if (!text) return;
+  if (btn) { btn.disabled = true; btn.textContent = "⏳"; }
+  try {
+    const r = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify({ text }),
+    });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.detail || "خطأ " + r.status); }
+    const b = await r.blob();
+    const au = new Audio(URL.createObjectURL(b));
+    au.onended = () => { if (btn) { btn.disabled = false; btn.textContent = "🔊"; } };
+    au.play().catch(() => {});
+  } catch (e) {
+    toast(e.message, true);
+    if (btn) { btn.disabled = false; btn.textContent = "🔊"; }
+  }
 }
 
 function mdRender(t) {
@@ -290,6 +327,7 @@ async function sendChat() {
       }
     }
     body.innerHTML = mdRender(acc || "…لا أستطيع الرد الآن.");
+    if (acc) setSpeakable(bubble, acc);
   } catch (e) {
     body.innerHTML = `<span class="st-bad">⚠️ ${esc(e.message)}</span>`;
     toast(e.message, true);
