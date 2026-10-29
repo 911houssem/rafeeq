@@ -81,6 +81,9 @@ async function boot() {
   if (me || token) {
     try { me = await api("/api/auth/me"); startApp(); return; } catch (e) { /* token قديم */ }
   }
+  // إظهار شاشة الدخول (الطبقة مخفية افتراضيًا في HTML)
+  $("authView").classList.remove("hidden");
+  $("appView").classList.add("hidden");  // ضمان إخفاء التطبيق إن كانت جلسة قديمة
   if (s && s.owner_exists === false) {
     $("setupBox").classList.remove("hidden");
     $("loginBox").classList.add("hidden");
