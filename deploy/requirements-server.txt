@@ -31,3 +31,7 @@ onnxruntime-gpu
 
 # أدوات النشر
 huggingface_hub>=0.24
+
+# ⚠️ حزمة محرك SILMA تُثبَّت بأمر منفصل لأن pip لا يسمح --no-deps داخل ملف المتطلبات:
+#   pip install --no-deps silma-tts
+# (وحدها نحتاجها بدون تبعياتها لأن vendor/nemo_text_processing يوفر بدل nemo/pynini)

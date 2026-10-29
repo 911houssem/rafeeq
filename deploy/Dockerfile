@@ -10,7 +10,8 @@ WORKDIR /app
 
 # كود التطبيق (المستودع) — مجلدات النماذج تنزّل لاحقًا على الفوليوم
 COPY requirements.txt deploy/requirements-server.txt ./
-RUN pip install --no-cache-dir -r requirements-server.txt
+RUN pip install --no-cache-dir -r requirements-server.txt \
+    && pip install --no-cache-dir --no-deps silma-tts
 
 COPY app ./app
 COPY vendor ./vendor

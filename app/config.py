@@ -8,7 +8,8 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- المسارات
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
+# مجلد البيانات (قاعدة SQLite) قابل للتغيير عبر البيئة — للسحب نضعها في وحدة تخزين دائمة
+DATA_DIR = Path(os.environ.get("RAFEEQ_DATA_DIR", str(BASE_DIR / "data")))
 STATIC_DIR = BASE_DIR / "static"
 DB_PATH = DATA_DIR / "app.db"
 SECRET_PATH = DATA_DIR / "secret.key"

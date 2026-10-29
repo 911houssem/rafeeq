@@ -29,6 +29,7 @@ pinstall torch torchaudio --index-url https://download.pytorch.org/whl/cpu
 grep -v '^onnxruntime-gpu' deploy/requirements-server.txt > /tmp/rafeeq-req.txt
 echo 'onnxruntime' >> /tmp/rafeeq-req.txt
 pinstall -r /tmp/rafeeq-req.txt
+pinstall --no-deps silma-tts
 
 log "3/4 تنزيل النماذج الأصلية المطلوبة (نفس ملفاتك حرفيًا — بلا GGUF)"
 TARGETS="tts"
