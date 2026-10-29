@@ -1,0 +1,33 @@
+# متطلبات الرسمان السحابي — تُثبّت فوق صورة PyTorch+CUDA
+# (torch/torchaudio موجودة أصلًا في الصورة الأساسية)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+httpx>=0.27
+numpy
+soundfile
+soxr
+matplotlib
+
+transformers==5.16.1
+accelerate>=1.0
+safetensors>=0.4
+
+# SILMA TTS
+librosa
+hydra-core>=1.3.0
+ema_pytorch>=0.5.2
+x_transformers>=1.31.14
+torchdiffeq
+vocos
+cached_path
+click
+pydub
+unidecode
+transformers_stream_generator
+tomli
+catt_tashkeel==1.0.2
+onnxruntime-gpu
+
+# أدوات النشر
+huggingface_hub>=0.24

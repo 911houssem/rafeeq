@@ -15,10 +15,10 @@ SECRET_PATH = DATA_DIR / "secret.key"
 OFFLOAD_DIR = DATA_DIR / "offload"
 VOICE_DIR = DATA_DIR / "voice"  # الصوت المرجعي لنظام TTS
 
-# مجلدات النماذج الأصلية كما هي في الملفات
-MODEL_ASR_DIR = BASE_DIR / "الاستماع Jais-ASR"
-MODEL_LLM_DIR = BASE_DIR / "التفكير Jais 3 7B"
-MODEL_TTS_DIR = BASE_DIR / "التحدث SILMA TTS"
+# مجلدات النماذج الأصلية كما هي في الملفات (قابلة للتغيير عبر متغيرات البيئة للسيرفر)
+MODEL_ASR_DIR = Path(os.environ.get("RAFEEQ_MODEL_ASR_DIR", str(BASE_DIR / "الاستماع Jais-ASR")))
+MODEL_LLM_DIR = Path(os.environ.get("RAFEEQ_MODEL_LLM_DIR", str(BASE_DIR / "التفكير Jais 3 7B")))
+MODEL_TTS_DIR = Path(os.environ.get("RAFEEQ_MODEL_TTS_DIR", str(BASE_DIR / "التحدث SILMA TTS")))
 
 for _d in (DATA_DIR, OFFLOAD_DIR, VOICE_DIR):
     _d.mkdir(parents=True, exist_ok=True)

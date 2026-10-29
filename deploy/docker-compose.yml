@@ -1,0 +1,26 @@
+# رفيق على VPS بكارت شاشة (Hetzner/RunPod/أي مزود بـ NVIDIA driver + docker + compose)
+# الاستخدام: docker compose up -d   (بعد وضع النماذج في ../models أو تشغيل download_models.py)
+services:
+  rafeeq:
+    build: .
+    container_name: rafeeq
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # النماذج (asr/llm/tts) وبيانات القاعدة على الفوليوم المستضيف
+      - ./models:/models
+      - ./data:/app/data
+    environment:
+      - RAFEEQ_HOST=0.0.0.0
+      - RAFEEQ_PORT=8000
+      - RAFEEQ_MODEL_ASR_DIR=/models/asr
+      - RAFEEQ_MODEL_LLM_DIR=/models/llm
+      - RAFEEQ_MODEL_TTS_DIR=/models/tts
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
