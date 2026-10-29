@@ -4,6 +4,30 @@
 
 ---
 
+## 🆓 الاستضافة المجانية (بلا أي مبلغ)
+
+### الفرع 1: GitHub Codespaces — واجهة + فوترة + مفاتيح API + نطق 🔊 (24/7 تقريبًا)
+تعمل على حساب GitHub حرفيًا بلا أي دفع. الجهاز القياسي: 4 أنوية / 16GB رام.
+
+```bash
+gh auth refresh -s codespace     # تفويض مرة واحدة
+gh codespace create --repo 911houssem/rafeeq --branch main \
+  --machine standardLinux32gb --idle-timeout 240m
+# داخل المساحة: bash /workspaces/rafeeq/deploy/codespace.sh
+# ثم اجعل المنفذ 8000 عامًا: gh codespace ports visibility 8000:public -c <اسم-المساحة>
+```
+النطق الخارج (`/api/tts` + زر 🔊) يعمل؛ الميكروفون يحتاج كارت شاشة (48GB — انظر الفرع 2).
+
+### الفرع 2: Modal — الصوت الكامل (كارت L40S 48GB) برصيد مجاني متجدد $30/شهر
+```bash
+pip install modal && modal setup
+modal run deploy/modal_app.py::download     # مرة واحدة: تنزيل النماذج الأصلية
+modal deploy deploy/modal_app.py            # رابط عمومي فوري
+```
+الأصلية 100% (بلا GGUF)، وإيقاف تلقائي عند الخمول = صفر استهلاك. ضمن الرصيد المجاني: ~10-11 ساعة تشغيل شهريًا.
+
+---
+
 ## ⚡ الخيار الأول: RunPod (الأسهل والأسرع — موصى به)
 
 **التكلفة:** كارت 48GB مثل L40S أو A6000 ≈ **0.5–0.8$/ساعة** (شغّله فقط عندما تريد — أوقفه وينقطع الفاتورة).
