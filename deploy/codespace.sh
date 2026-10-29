@@ -5,12 +5,16 @@
 # لا يعمل على هذا الجهاز: الاستماع من الميكروفون (Jais-ASR يحتاج كارت شاشة) — النماذج الثلاثة معًا تحتاج 48GB
 #
 # الاستخدام:
-#   bash /workspaces/rafeeq/deploy/codespace.sh
+#   bash deploy/codespace.sh        (داخل مجلد المستودع في المساحة)
 # لإضافة نموذج التفكير أيضًا (إن وُجدت الموارد):
-#   RAFEEQ_CODESPACE_LLM=1 bash /workspaces/rafeeq/deploy/codespace.sh
+#   RAFEEQ_CODESPACE_LLM=1 bash deploy/codespace.sh
 # ============================================================
 set -uo pipefail
-cd /workspaces/rafeeq || { echo "❌ المستودع غير موجود في /workspaces/rafeeq"; exit 1; }
+# المسار: some Codespaces clones into /workspaces/rafeeq, others into /workspaces itself
+WORK="/workspaces/rafeeq"
+[ -d "$WORK/.git" ] || WORK="/workspaces"
+cd "$WORK" || { echo "❌ لم أجد المستودع تحت /workspaces"; exit 1; }
+echo "المجلد: $WORK"
 export PYTHONIOENCODING=utf-8 PIP_NO_CACHE_DIR=1 MPLBACKEND=Agg
 log(){ echo "[$(date +%H:%M:%S)] $*"; }
 
@@ -34,10 +38,10 @@ pinstall --no-deps silma-tts
 log "3/4 تنزيل النماذج الأصلية المطلوبة (نفس ملفاتك حرفيًا — بلا GGUF)"
 TARGETS="tts"
 [ "${RAFEEQ_CODESPACE_LLM:-0}" = "1" ] && TARGETS="$TARGETS llm"
-RAFEEQ_MODELS_ROOT=/workspaces/rafeeq/models $PY deploy/download_models.py $TARGETS
+RAFEEQ_MODELS_ROOT="$WORK/models" $PY deploy/download_models.py $TARGETS
 
-LLM_DIR="/workspaces/rafeeq/models-llm-missing"
-[ -f "/workspaces/rafeeq/models/llm/config.json" ] && LLM_DIR="/workspaces/rafeeq/models/llm"
+LLM_DIR="$WORK/models-llm-missing"
+[ -f "$WORK/models/llm/config.json" ] && LLM_DIR="$WORK/models/llm"
 
 log "4/4 تشغيل الخادم على المنفذ 8000"
 mkdir -p data
@@ -46,10 +50,10 @@ if curl -sf http://127.0.0.1:8000/api/health >/dev/null 2>&1; then
 else
   pkill -f "uvicorn app.main:app" 2>/dev/null || true
   RAFEEQ_HOST=0.0.0.0 RAFEEQ_PORT=8000 \
-    RAFEEQ_MODEL_TTS_DIR="/workspaces/rafeeq/models/tts" \
-    RAFEEQ_MODEL_ASR_DIR="/workspaces/rafeeq/models-asr-missing" \
+    RAFEEQ_MODEL_TTS_DIR="$WORK/models/tts" \
+    RAFEEQ_MODEL_ASR_DIR="$WORK/models-asr-missing" \
     RAFEEQ_MODEL_LLM_DIR="$LLM_DIR" \
     nohup $PY -m uvicorn app.main:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
-  log "بدأ التشغيل — السجل: /workspaces/rafeeq/server.log"
+  log "بدأ التشغيل — السجل: $WORK/server.log"
 fi
 log "انتهى — افحص http://127.0.0.1:8000/api/health"
